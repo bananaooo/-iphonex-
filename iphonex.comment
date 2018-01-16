@@ -1,0 +1,48 @@
+# -*- coding : UTF-8 -*-
+#写一个spider爬取京东iPhoneX的评论并对其进行可视化
+import re
+import pandas as pd
+import requests
+
+
+f = open('d:\pythonlib2\spider\comment_iphonex.txt','a') #open一个文件夹叫做，自己创建的
+for i in range(0,137):                 #137是评论总的页数
+    try:
+        response = requests.get("https://sclub.jd.com/comment/productPageComments.action?callback=fetchJSON_comment98vv3855&productId=5089235&score=0&sortType=5&page=1&pageSize=10&isShadowSku=0&rid=0&fold=1")
+        response = response.text           #上面是第一页评论对应的url
+        #print(response)
+        pat = '"content":(.*?)","'          #对评论用正则进行筛选
+        res = re.findall(pat,response)
+        # type(res)   #check the typye of res
+        for i in res:
+            #print(i.replace('\\n',' '))  # i = i.repalce('\\n',' ') desen't work
+            f.write(i.replace('\\n',' ' + '\n'))   #写入
+    except:
+        print('爬取第'+str(i)+'出现问题')
+        continue                                    #打印有问题的页数然后继续
+f = f.close()
+
+#下面开始词云制作
+from os import path
+from scipy.misc import imread
+import matplotlib.pyplot as plt
+import jieba
+from wordcloud import WordCloud
+
+f = open('d:\pythonlib2\spider\comment_iphonex.txt','r')
+text = f.read()
+
+cut_text = ' '.join(jieba.lcut(text))
+#print(cut_text)
+color_mask = imread("iphonex.png")
+cloud = WordCloud(
+    font_path='ygyxs.ttf',  # 字体最好放在与脚本相同的目录下，（叶根友行书），自己去下喜欢的字体
+    background_color='white',  #云图对应背景，字号之类的设置
+    mask = color_mask,
+    max_words = 200,
+    max_font_size = 5000
+)
+word_cloud = cloud.generate(cut_text)
+plt.imshow(word_cloud)
+plt.axis('off')
+plt.show()
